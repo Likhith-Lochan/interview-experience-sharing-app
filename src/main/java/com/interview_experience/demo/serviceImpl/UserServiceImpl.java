@@ -7,6 +7,9 @@ import com.interview_experience.demo.payload.UserDto;
 import com.interview_experience.demo.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +38,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CachePut(value = "users",key ="#id")
     public UserDto updateUser(UserDto user, Integer id) {
 
         User cat =this.userRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("User","User Id",id));
@@ -50,6 +54,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users",key = "#id")
     public UserDto getUserById(Integer id) {
         User cat =this.userRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("User","User Id",id));
 
@@ -57,6 +62,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users")
     public List<UserDto> getAllUsers() {
 
         List<User> users=this.userRepo.findAll();
@@ -66,6 +72,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "users",key = "#id")
     public void deleteUser(Integer id) {
         User cat =this.userRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("User","User Id",id));
         this.userRepo.delete(cat);

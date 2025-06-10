@@ -12,6 +12,9 @@ import com.interview_experience.demo.payload.PostResponse;
 import com.interview_experience.demo.service.PostService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +40,7 @@ public class PostServiceImpl implements PostService {
     private CategoryRepo categoryRepo;
 
     @Override
+    @CachePut(value = "posts",key = "#userId")
     public PostDto createPost(PostDto postDto,Integer userId,Integer categoryId) {
         User user=this.userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("user","user id",userId));
 
@@ -52,6 +56,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @CachePut(value = "posts",key = "#postId")
     public PostDto updatedPost(PostDto postDto,Integer postId) {
         Post post =this.postRepo.findById(postId).orElseThrow(()-> new ResourceNotFoundException("post","postId",postId));
 
@@ -66,12 +71,14 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @CacheEvict(value = "posts",key = "#postId")
     public void deletePost(Integer postId) {
         Post post=this.postRepo.findById(postId).orElseThrow(()->new ResourceNotFoundException("Post","Post Id",postId));
         this.postRepo.delete(post);
     }
 
     @Override
+    @Cacheable(value = "allPosts",key = "#pageSize")
     public PostResponse getAllPosts(Integer pageNumber,Integer pageSize,String sortBy,String sortDir) {
 
         Sort sort=null;
@@ -98,12 +105,14 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Cacheable(value = "posts",key = "#postId")
     public PostDto getPostById(Integer postId) {
         Post post=this.postRepo.findById(postId).orElseThrow(()->new ResourceNotFoundException("post","post id ",postId));
         return this.modelMapper.map(post,PostDto.class);
     }
 
     @Override
+    @Cacheable(value = "posts",key = "#categoryId")
     public List<PostDto> getPostsByCategory(Integer categoryId) {
 
         Category cat=this.categoryRepo.findById(categoryId).orElseThrow(()->new ResourceNotFoundException("category","category id",categoryId));
@@ -113,6 +122,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Cacheable(value = "posts",key = "#userId")
     public List<PostDto> getPostByUser(Integer userId) {
         User user=this.userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("user","user id",userId));
         List<Post> posts= this.postRepo.findByUser(user);
@@ -123,6 +133,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Cacheable(value = "posts",key = "#keyword")
     public List<PostDto> searchPosts(String keyword) {
         List<Post> posts=this.postRepo.findByTitleContaining(keyword);
         List<PostDto> postDtos=posts.stream().map((post)->this.modelMapper.map(post,PostDto.class)).toList();
